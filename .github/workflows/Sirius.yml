@@ -1,0 +1,36 @@
+name: Sirius CI
+
+on:
+  push:
+    branches: [ main ]
+
+  workflow_dispatch:
+    
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Add mask
+      run: |
+        echo "::add-mask::${{ secrets.S3_URL }}" 
+        
+    - name: Checkout repository
+      uses: actions/checkout@v2.4.0
+      with:
+        ssh-key: ${{ secrets.SSH_KEY }}
+        submodules: recursive
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.6
+        bundler-cache: true
+
+    - name: Build with fastlane
+      run: |
+        cd submodules/Sirius
+        bundle install
+        bundle exec fastlane spongekit_adhoc subdir:github_action s3key:${{ secrets.S3_KEY }} s3secret:${{ secrets.S3_SECRET }}
